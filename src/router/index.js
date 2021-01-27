@@ -35,7 +35,7 @@ export default new VueRouter({
         },
         {
             path:'/',
-            redirect:'/home'
+            redirect:'/home',
         }
     ]
 })
