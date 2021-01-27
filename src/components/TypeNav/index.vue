@@ -1692,9 +1692,17 @@
 </template>
 
 <script>
-
+import { mapState } from 'vuex' ;
 export default {
-    name:'TypeNav'
+    name:'TypeNav',
+    mounted(){
+        this.$store.dispatch('getCategoryList')
+    },
+    computed:{
+        ...mapState({
+            categoryList:state => state.home.categoryList
+        })
+    }
 }
 </script>
 
