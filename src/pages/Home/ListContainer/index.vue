@@ -4,18 +4,20 @@
             <div class="center">
                 <!--banner轮播-->
                 <div class="swiper-container" id="mySwiper">
-                    <div class="swiper-wrapper">
-                        <div class="swiper-slide">
-                            <img src="./images/banner1.jpg" />
+                    <!-- <div class="swiper-wrapper">
+                        <div class="swiper-slide" v-for="(banner,index) in bannerList" :key="banner.id">
+                            <img :src="banner.imgUrl" />
                         </div>
-                    </div>
+                    </div> -->
                     <!-- 如果需要分页器 -->
-                    <div class="swiper-pagination"></div>
+                    <!-- <div class="swiper-pagination"></div> -->
 
                     <!-- 如果需要导航按钮 -->
-                    <div class="swiper-button-prev"></div>
+                    <!-- <div class="swiper-button-prev"></div>
                     <div class="swiper-button-next"></div>
+                </div> -->
                 </div>
+                <SlideLoop :bannerList="bannerList"></SlideLoop>
             </div>
             <div class="right">
                 <div class="news">
@@ -98,11 +100,23 @@
             </div>
         </div>
     </div>
+
 </template>
 
 <script>
+import { mapState } from 'vuex'
+// import Swiper from 'swiper';
+// import 'swiper/css/swiper.css'
 export default {
-  name: 'listContainer',
+  name: '',
+  mounted(){
+      this.$store.dispatch('getBannerList')
+  },
+  computed:{
+      ...mapState({
+          bannerList:state => state.home.bannerList
+      })
+  }
 }
 </script>
 
