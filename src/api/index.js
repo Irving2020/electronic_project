@@ -36,3 +36,11 @@ export const reqFloorList = () => {
         method:'get'
     })
 }
+
+export const reqSearchInfo = (searchParams) => {
+    return request({
+        url:'/list',
+        methodL:'post',
+        data:searchParams
+    })
+}
