@@ -4,6 +4,8 @@ Vue.use(Vuex)
 
 import user from './user'
 import home from './home'
+import search from './search'
+import detail from './detail'
 
 /**
  * 存放数据
@@ -40,6 +42,8 @@ export default new Vuex.Store({
     getters,
     modules:{
       user,
-      home
+      home,
+      search,
+      detail
     }
   })

@@ -54,10 +54,28 @@
 <script>
 export default {
   name: "Header",
+  data(){
+    return{
+      keyword:"",
+    }
+  },
+  mounted(){
+    this.$bus.$on('clearKeyword',this.clearKeyword)
+  },
   methods: {
     toSearch() {
-      this.$router.push('/search');
+      let location = {
+        name:"search",
+        prames:{keyword:this.keyword || undefined},
+      }
+      if(this.$route.query){
+        location.query = this.$route.query
+      }
+      this.$router.push(location);
     },
+    clearKeyword(){
+      this.keyword = ''
+    }
   },
 };
 </script>

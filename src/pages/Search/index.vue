@@ -11,15 +11,23 @@
             </li>
           </ul>
           <ul class="fl sui-tag">
-            <li class="with-x">手机</li>
-            <li class="with-x">iphone<i>×</i></li>
-            <li class="with-x">华为<i>×</i></li>
-            <li class="with-x">OPPO<i>×</i></li>
+            <li class="with-x" v-if="searchParams.categoryName">
+              {{ searchParams.categoryName }}<i @click="removeCategoryName">x</i>
+              </li>
+            <li class="with-x" v-if="searchParams.keyword">
+              {{ searchParams.keyword }}<i @click="removeKeyword">×</i>
+              </li>
+            <li class="with-x" v-if="searchParams.trademark">
+              {{ searchParams.trademark.split(":")[1] }}<i @click="removeTrademark">>×</i>
+              </li>
+            <li class="with-x" v-for="(prop,index) in searchParams.props" :key="prop">
+              {{prop.split(':')[1]}}<i @click="removeProp(index)">×</i>
+              </li>
           </ul>
         </div>
 
         <!--selector-->
-        <SearchSelector />
+        <SearchSelector @searchForTrademark="searchForTrademark" @searchForProps="searchForProps"/>
 
         <!--details-->
         <div class="details clearfix">
@@ -52,7 +60,9 @@
               <li class="yui3-u-1-5" v-for="(goods) in goodsList" :key="goods.id">
                 <div class="list-wrap">
                   <div class="p-img">
-                    <a href="item.html" target="_blank"><img :src="goods.defaultImg" /></a>
+                    <router-link :to="'/detail/'+goods.id">
+                      <img :src="goods.defaultImg">
+                    </router-link>
                   </div>
                   <div class="price">
                     <strong>
@@ -61,8 +71,9 @@
                     </strong>
                   </div>
                   <div class="attr">
-                    <a target="_blank" href="item.html" title="促销信息，下单即赠送三个月CIBN视频会员卡！【小米电视新品4A 58 火爆预约中】">Apple苹果iPhone
-                      {{goods.title}}</a>
+                    <router-link :to="'/detail/'+goods.id">
+                      {{goods.title}}
+                    </router-link>
                   </div>
                   <div class="commit">
                     <i class="command">已有<span>2000</span>人评价</i>
@@ -75,35 +86,13 @@
               </li>
             </ul>
           </div>
-          <div class="fr page">
-            <div class="sui-pagination clearfix">
-              <ul>
-                <li class="prev disabled">
-                  <a href="#">«上一页</a>
-                </li>
-                <li class="active">
-                  <a href="#">1</a>
-                </li>
-                <li>
-                  <a href="#">2</a>
-                </li>
-                <li>
-                  <a href="#">3</a>
-                </li>
-                <li>
-                  <a href="#">4</a>
-                </li>
-                <li>
-                  <a href="#">5</a>
-                </li>
-                <li class="dotted"><span>...</span></li>
-                <li class="next">
-                  <a href="#">下一页»</a>
-                </li>
-              </ul>
-              <div><span>共10页&nbsp;</span></div>
-            </div>
-          </div>
+          <Pagination
+            :currentPageNo="searchParams.pageNo"
+            :total="searchInfo.total"
+            :pageSize="searchParams.pageSize"
+            :continueNo="5"
+            @changePageNo="changePageNo"
+          ></Pagination>
         </div>
       </div>
     </div>
@@ -111,23 +100,133 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapState } from 'vuex'
   import SearchSelector from './SearchSelector/SearchSelector'
   export default {
     name: 'Search',
     components: {
       SearchSelector
     },
+    data(){
+      return {
+        searchParams:{
+          category1Id:'',
+          category2Id:'',
+          category3Id:'',
+          cateseargoryName:"",
+          keyword:"",
+          props:[],
+          trademark:"",
+          order:"1:desc",
+          pageNo:1,
+          pageSize:10
+        }
+      }
+    },
+    beforeMount(){
+      this.handleSearchParams()
+    },
     mounted(){
       this.getSearchInfo()
     },
     methods:{
       getSearchInfo(){
-        this.$store.dispatch('getCategoryList',{})
+        this.$store.dispatch('getSearchInfo',this.searchParams)
+      },
+      handleSearchParams(){
+        let{
+          category1Id,
+          category2Id,
+          category3Id,
+          categoryName
+        } = this.$route.query;
+        let { keyword } = this.$route.params;
+        let searchParams = {
+          ...this.searchParams,
+          category1Id,
+          category2Id,
+          category3Id,
+          categoryName,
+          keyword
+        }
+        this.searchParams = searchParams
+      },
+      removeCategoryName(){
+        this.searchParams.category1Id = undefined
+        this.searchParams.category2Id = undefined
+        this.searchParams.category3Id = undefined
+        this.searchParams.categoryName = undefined
+        this.$router.push({name:'Search',params:this.$route.params})
+      },
+      removeKeyword(){
+        this.searchParams.keyword = undefined
+        this.$bus.$emit('clearKeyword')
+        this.$router.push({name:'Search',query:this.$route.query})
+      },
+      searchForTrademark(trademark){
+        this.searchParams.trademark = `${trademark.tmId}:${trademark.tmName}`
+        this.getSearchInfo()
+      },
+      searchForProps(attrValue,attr){
+        let prop = `${attr.attrId}:${attrValue}:${attr.attrName}`
+        let isRepeate = this.searchParams.props.some(item => item === prop)
+        if(isRepeate){
+          return
+        }
+        this.searchParams.props.push(prop)
+        this.getSearchInfo();
+      },
+      removeProp(index){
+        this.searchParams.props.splice(index,1)
+        this.getSearchInfo();
+      },
+      removeTrademark(){
+        this.searchParams.trademark = undefined
+        this.getSearchInfo();
+      },
+      changeSort(sortFlag) {
+      let originSortFlag = this.sortFlag;
+      let originSortType = this.sortType;
+      let newOrder = "";
+      //判断用户点击的是不是还是原来的
+      if (sortFlag === originSortFlag) {
+        //假设用户点击的排序标志和原来的是一样的，证明点击的还是同一个排序，那么我们需要把排序类型改变
+        newOrder = `${originSortFlag}:${
+          originSortType === "asc" ? "desc" : "asc"
+        }`;
+      } else {
+        //假设用户点击的排序标志和原来的是不一样的，证明点击的不是同一个排序，那么我们需要把排序标志改变，排序类型默认
+        newOrder = `${sortFlag}:desc`;
+      }
+      this.searchParams.order = newOrder; //把排序规则的数据修改
+      this.searchParams.pageNo = 1
+      this.getSearchInfo(); //重新发送请求获取新排序的数据显示
+    },
+
+    //分页器点击切换页码的时候，触发的自定义事件回调
+    changePageNo(page){
+      this.searchParams.pageNo = page
+      this.getSearchInfo()
       }
     },
     computed: {
-      ...mapGetters(['goodsList'])
+      ...mapGetters(['goodsList']),
+       ...mapState({
+      searchInfo: (state) => state.search.searchInfo,
+    }),
+    //优化代码
+    sortFlag() {
+      return this.searchParams.order.split(":")[0];
+    },
+    sortType() {
+      return this.searchParams.order.split(":")[1];
+    },
+    },
+    watch:{
+      $route(newVal,oldval){
+        this.handleSearchParams();
+        this.getSearchInfo()
+      }
     }
   }
 </script>
